@@ -34,7 +34,9 @@
 
     var Poller = function(url) {
         this.url = url;
+
         var that = this;
+        var fail = this._fail.bind(this);
 
         this._connect().then(function(data) {
             if (typeof data.uuid === 'string') {
@@ -42,13 +44,9 @@
                 that.onopen();
                 that._poll();
             } else {
-                that.onerror();
-                that.onclose();
+                that._fail();
             }
-        }, function() {
-            that.onerror();
-            that.onclose();
-        });
+        }, fail);
     };
 
     Poller.prototype._connect = function() {
@@ -56,6 +54,11 @@
             url: this.url,
             dataType: 'json'
         });
+    };
+
+    Poller.prototype._fail = function() {
+        this.onerror();
+        this.onclose();
     };
 
     Poller.prototype._poll = function() {
@@ -75,8 +78,7 @@
             if (textStatus === 'timeout') {
                 that._poll();
             } else {
-                that.onerror();
-                that.onclose();
+                that._fail();
             }
         });
     };
@@ -92,8 +94,7 @@
             that.onclose();
         }, function() {
             delete that.uuid;
-            that.onerror();
-            that.onclose();
+            that._fail();
         });
     };
 
