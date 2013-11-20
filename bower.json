@@ -1,0 +1,20 @@
+{
+  "name": "poll.js",
+  "main": "poll.js",
+  "version": "0.0.0",
+  "authors": [
+    "Kim Joar Bekkelund <kjbekkelund@gmail.com>"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "devDependencies": {
+    "jquery": "~2.0.3",
+    "sinonjs": "~1.7.3"
+  }
+}
