@@ -237,7 +237,32 @@ describe("poller", function() {
         });
     });
 
-    it("performs new poll request when poll request fails", function() {
+    it("performs new poll request when request times out", function() {
+        allRequests(function(requests) {
+            var clock = sinon.useFakeTimers();
+
+            var poller = new Poller("/test");
+
+            poller.onmessage = sinon.spy();
+
+            requests[0].respond(200, json, uuid);
+            requests[1].respond(200, json, data);
+
+            clock.tick(45000);
+
+            // this request should time out
+            requests[2].respond(200, json, data);
+
+            requests[3].respond(200, json, data);
+            requests[4].respond(200, json, data);
+
+            expect(poller.onmessage.callCount).toBe(3);
+
+            clock.restore();
+        });
+    });
+
+    it("does not perform new poll request when poll request fails", function() {
         allRequests(function(requests) {
             var poller = new Poller("/test");
 
@@ -247,10 +272,11 @@ describe("poller", function() {
             requests[0].respond(200, json, uuid);
             requests[1].respond(200, json, data);
             requests[2].respond(400, json, "");
-            requests[3].respond(200, json, data);
+
+            expect(requests.length).toBe(3);
 
             expect(poller.onerror.callCount).toBe(1);
-            expect(poller.onmessage.callCount).toBe(2);
+            expect(poller.onmessage.callCount).toBe(1);
         });
     });
 

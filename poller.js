@@ -35,12 +35,10 @@
 
     var Poller = function(url) {
         this.url = url;
-
         var that = this;
 
-        this._connect().then(function(data, textStatus, jqXHR) {
-            var statusCode = jqXHR.statusCode();
-            if (data.uuid) {
+        this._connect().then(function(data) {
+            if (typeof data.uuid === 'string') {
                 that.uuid = data.uuid;
                 that.onopen();
                 that._poll();
@@ -72,11 +70,15 @@
             timeout: 30000,
             cache: false
         }).then(function(data) {
-            that.onmessage({ data: data });
+            if (data) that.onmessage({ data: data });
             that._poll();
-        }, function() {
-            that.onerror();
-            that._poll();
+        }, function(jqXHR, textStatus) {
+            if (textStatus === 'timeout') {
+                that._poll();
+            } else {
+                that.onerror();
+                that.onclose();
+            }
         });
     };
 
@@ -96,28 +98,28 @@
         });
     };
 
-    // external api
     Poller.prototype.send = function(data) {
         var that = this;
 
         $.ajax({
             url: this.url + "/" + this.uuid,
             type: 'POST',
-            data: data
+            data: JSON.stringify(data),
+            contentType: 'application/json'
         }).then(function() {
             // a-ok
         }, function() {
             // failed
             that.onerror();
-        });;
+        });
     };
 
+    // defaults
     Poller.prototype.onopen = function() {};
     Poller.prototype.onerror = function() {};
     Poller.prototype.onmessage = function() {};
     Poller.prototype.onclose = function() {};
 
     return Poller;
-
 
 }));
