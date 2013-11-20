@@ -2,18 +2,17 @@
 
     if (typeof define === 'function' && define.amd) {
         // amd
-        define(['underscore', 'jquery'], factory);
+        define(['jquery'], factory);
     } else if (typeof exports !== 'undefined') {
         // Node.js or CommonJS
-        var _ = require('underscore'), $;
         try { $ = require('jquery'); } catch(e) {};
-        factory(_, $);
+        factory($);
     } else {
         // browser global
-        root.Poller = factory(root._, root.jQuery);
+        root.Poller = factory(root.jQuery);
     }
 
-}(this, function (_, $) {
+}(this, function ($) {
     'use strict';
 
     // GET /polling
