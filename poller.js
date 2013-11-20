@@ -32,8 +32,14 @@
     // poller.onmessage = function() {}
     // poller.onclose = function() {}
 
+    var CONNECTING = 0,
+        OPEN = 1,
+        CLOSING = 2,
+        CLOSED = 3;
+
     var Poller = function(url) {
         this.url = url;
+        this.readyState = CONNECTING;
 
         var connected = this._connected.bind(this);
         var fail = this._fail.bind(this);
@@ -51,6 +57,7 @@
     Poller.prototype._connected = function(data) {
         if (typeof data.uuid === 'string') {
             this.uuid = data.uuid;
+            this.readyState = OPEN;
             this.onopen();
             this._poll();
         } else {
@@ -64,7 +71,7 @@
     };
 
     Poller.prototype._poll = function() {
-        if (!this.uuid) return;
+        if (this.readyState !== OPEN) return;
 
         var that = this;
 
@@ -86,6 +93,10 @@
     };
 
     Poller.prototype.close = function() {
+        if (this.readyState === CLOSING || this.readyState === CLOSED) return;
+
+        this.readyState = CLOSING;
+
         var that = this;
 
         $.ajax({
@@ -93,9 +104,11 @@
             type: 'DELETE'
         }).then(function() {
             delete that.uuid;
+            that.readyState = CLOSED;
             that.onclose();
         }, function() {
             delete that.uuid;
+            that.readyState = CLOSED;
             that._fail();
         });
     };
