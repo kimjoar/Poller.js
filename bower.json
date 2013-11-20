@@ -1,6 +1,6 @@
 {
-  "name": "poll.js",
-  "main": "poll.js",
+  "name": "poller.js",
+  "main": "poller.js",
   "version": "0.0.0",
   "authors": [
     "Kim Joar Bekkelund <kjbekkelund@gmail.com>"
