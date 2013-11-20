@@ -114,6 +114,8 @@
     };
 
     Poller.prototype.send = function(data) {
+        if (this.readyState !== OPEN) return;
+
         var that = this;
 
         $.ajax({

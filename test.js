@@ -228,6 +228,17 @@ describe("poller", function() {
         });
     });
 
+    it("does not send data when connection is not set up", function() {
+        allRequests(function(requests) {
+            var poller = new Poller("/test");
+
+            poller.send({ test: 'something' });
+
+            expect(requests.length).toBe(1);
+        });
+    });
+
+
     function allRequests(callback) {
         var xhr = sinon.useFakeXMLHttpRequest();
         var requests = [];
