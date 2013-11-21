@@ -5,7 +5,8 @@
         define(['jquery'], factory);
     } else if (typeof exports !== 'undefined') {
         // Node.js or CommonJS
-        try { $ = require('jquery'); } catch(e) {};
+        var $;
+        try { $ = require('jquery'); } catch(e) {}
         factory($);
     } else {
         // browser global
@@ -14,23 +15,6 @@
 
 }(this, function ($) {
     'use strict';
-
-    // GET /polling
-    // -> 200: <uuid>
-    //
-    // GET /polling/<uuid>
-    // -> timeout 30
-    //
-    // reconnects
-
-    // var poller = new Poller("url");
-    //
-    // poller.send("test");
-    //
-    // poller.onopen = function() {}
-    // poller.onerror = function() {}
-    // poller.onmessage = function() {}
-    // poller.onclose = function() {}
 
     var CONNECTING = 0,
         OPEN = 1,
