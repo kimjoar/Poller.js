@@ -61,7 +61,7 @@
 
         $.ajax({
             url: this.url + "/" + this.uuid,
-            dataType: 'json',
+            dataType: 'text',
             timeout: 30000,
             cache: false
         }).then(function(data) {
@@ -105,8 +105,8 @@
         $.ajax({
             url: this.url + "/" + this.uuid,
             type: 'POST',
-            data: JSON.stringify(data),
-            contentType: 'application/json'
+            data: data,
+            contentType: 'text/plain'
         }).then(function() {
             // a-ok
         }, function() {

@@ -1,7 +1,6 @@
 describe("poller", function() {
-    var json = { "Content-Type": "application/json" };
-    var data = JSON.stringify({ some: "data" });
-    var noData = JSON.stringify({});
+    var headers = { "Content-Type": "text/plain" };
+    var data = "some data"
     var uuid = JSON.stringify({ uuid: "123-123" });
 
     it("immediately performs ajax request to root resource when creating a new instance", function() {
@@ -22,7 +21,7 @@ describe("poller", function() {
 
         poller.onopen = sinon.spy();
 
-        requests[0].respond(200, json, uuid);
+        requests[0].respond(200, headers, uuid);
 
         expect(poller.onopen.callCount).toBe(1);
     });
@@ -36,7 +35,7 @@ describe("poller", function() {
 
         poller.onopen = sinon.spy();
 
-        requests[0].respond(200, json, noData);
+        requests[0].respond(200, headers, "");
 
         expect(poller.onopen.callCount).toBe(0);
     });
@@ -50,7 +49,7 @@ describe("poller", function() {
 
         poller.onerror = sinon.spy();
 
-        requests[0].respond(400, json, "");
+        requests[0].respond(400, headers, "");
 
         expect(poller.onerror.callCount).toBe(1);
     });
@@ -64,7 +63,7 @@ describe("poller", function() {
 
         poller.onclose = sinon.spy();
 
-        requests[0].respond(400, json, "");
+        requests[0].respond(400, headers, "");
 
         expect(poller.onclose.callCount).toBe(1);
     });
@@ -78,7 +77,7 @@ describe("poller", function() {
 
         poller.onerror = sinon.spy();
 
-        requests[0].respond(200, json, noData);
+        requests[0].respond(200, headers, "");
 
         expect(poller.onerror.callCount).toBe(1);
     });
@@ -92,7 +91,7 @@ describe("poller", function() {
 
         poller.onclose = sinon.spy();
 
-        requests[0].respond(200, json, noData);
+        requests[0].respond(200, headers, "");
 
         expect(poller.onclose.callCount).toBe(1);
     });
@@ -101,7 +100,7 @@ describe("poller", function() {
         allRequests(function(requests) {
             var poller = new Poller("/test");
 
-            requests[0].respond(200, json, uuid);
+            requests[0].respond(200, headers, uuid);
 
             expect(requests.length).toBe(2);
             expect(requests[1].url).toContain("123-123");
@@ -111,15 +110,14 @@ describe("poller", function() {
     it("calls onmessage with received data if poll succeeds", function() {
         allRequests(function(requests) {
             var poller = new Poller("/test");
-            var data = { some: 'data' };
 
             poller.onmessage = sinon.spy();
 
-            requests[0].respond(200, json, uuid);
-            requests[1].respond(200, json, JSON.stringify(data));
+            requests[0].respond(200, headers, uuid);
+            requests[1].respond(200, headers, "some data");
 
             expect(poller.onmessage.callCount).toBe(1);
-            expect(poller.onmessage.firstCall.args[0]).toEqual({ data: data });
+            expect(poller.onmessage.firstCall.args[0]).toEqual({ data: "some data" });
         });
     });
 
@@ -129,10 +127,10 @@ describe("poller", function() {
 
             poller.onmessage = sinon.spy();
 
-            requests[0].respond(200, json, uuid);
-            requests[1].respond(200, json, data);
-            requests[2].respond(200, json, data);
-            requests[3].respond(200, json, data);
+            requests[0].respond(200, headers, uuid);
+            requests[1].respond(200, headers, data);
+            requests[2].respond(200, headers, data);
+            requests[3].respond(200, headers, data);
 
             expect(poller.onmessage.callCount).toBe(3);
         });
@@ -146,16 +144,16 @@ describe("poller", function() {
 
             poller.onmessage = sinon.spy();
 
-            requests[0].respond(200, json, uuid);
-            requests[1].respond(200, json, data);
+            requests[0].respond(200, headers, uuid);
+            requests[1].respond(200, headers, data);
 
             clock.tick(45000);
 
             // this request should time out
-            requests[2].respond(200, json, data);
+            requests[2].respond(200, headers, data);
 
-            requests[3].respond(200, json, data);
-            requests[4].respond(200, json, data);
+            requests[3].respond(200, headers, data);
+            requests[4].respond(200, headers, data);
 
             expect(poller.onmessage.callCount).toBe(3);
 
@@ -170,9 +168,9 @@ describe("poller", function() {
             poller.onmessage = sinon.spy();
             poller.onerror = sinon.spy();
 
-            requests[0].respond(200, json, uuid);
-            requests[1].respond(200, json, data);
-            requests[2].respond(400, json, "");
+            requests[0].respond(200, headers, uuid);
+            requests[1].respond(200, headers, data);
+            requests[2].respond(400, headers, "");
 
             expect(requests.length).toBe(3);
 
@@ -186,7 +184,7 @@ describe("poller", function() {
             var poller = new Poller("/test");
             poller.onclose = sinon.spy();
 
-            requests[0].respond(200, json, uuid);
+            requests[0].respond(200, headers, uuid);
 
             poller.close();
 
@@ -201,30 +199,31 @@ describe("poller", function() {
             var poller = new Poller("/test");
             poller.onclose = sinon.spy();
 
-            requests[0].respond(200, json, uuid);
+            requests[0].respond(200, headers, uuid);
 
             poller.close();
 
             expect(poller.onclose.callCount).toBe(0);
 
-            requests[2].respond(204, json, "");
+            requests[2].respond(204, headers, "");
 
             expect(poller.onclose.callCount).toBe(1);
         });
     });
 
-    it("sends data", function() {
+    it("sends data as plain text", function() {
         allRequests(function(requests) {
             var poller = new Poller("/test");
             poller.onclose = sinon.spy();
 
-            requests[0].respond(200, json, uuid);
+            requests[0].respond(200, headers, uuid);
 
-            poller.send({ test: 'something' });
+            poller.send("testing this");
 
             expect(requests.length).toBe(3);
             expect(requests[2].url).toContain("123-123");
             expect(requests[2].method).toEqual("POST");
+            expect(requests[2].requestBody).toEqual("testing this");
         });
     });
 
@@ -232,7 +231,7 @@ describe("poller", function() {
         allRequests(function(requests) {
             var poller = new Poller("/test");
 
-            poller.send({ test: 'something' });
+            poller.send("testing");
 
             expect(requests.length).toBe(1);
         });
