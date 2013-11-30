@@ -1,7 +1,7 @@
 describe("poller", function() {
     var headers = { "Content-Type": "text/plain" };
     var data = "some data"
-    var uuid = JSON.stringify({ uuid: "123-123" });
+    var uuid = "123-123";
 
     it("immediately performs ajax request to root resource when creating a new instance", function() {
         var requests = allRequests(function() {

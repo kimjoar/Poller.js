@@ -34,13 +34,13 @@
     Poller.prototype._connect = function() {
         return $.ajax({
             url: this.url,
-            dataType: 'json'
+            dataType: 'text'
         });
     };
 
     Poller.prototype._connected = function(data) {
-        if (typeof data.uuid === 'string') {
-            this.uuid = data.uuid;
+        if (typeof data === 'string' && data.trim() !== "") {
+            this.uuid = data;
             this.readyState = OPEN;
             this.onopen();
             this._poll();
