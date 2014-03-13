@@ -26,9 +26,10 @@
         this.readyState = CONNECTING;
 
         var connected = this._connected.bind(this);
-        var fail = this._fail.bind(this);
+        var fail = this._error.bind(this);
 
-        this._connect().then(connected, fail);
+        this._currentConnection = this._connect();
+        this._currentConnection.then(connected, fail);
     };
 
     Poller.prototype._connect = function() {
@@ -46,15 +47,14 @@
             this.onopen();
             this._poll();
         } else {
-            this._fail();
+            this._error();
         }
     };
 
-    Poller.prototype._fail = function() {
+    Poller.prototype._error = function() {
         this.dispatchEvent({ type: 'error' });
         this.onerror();
-        this.dispatchEvent({ type: 'close' });
-        this.onclose();
+        this._close();
     };
 
     Poller.prototype._poll = function() {
@@ -77,13 +77,17 @@
             if (textStatus === 'timeout') {
                 that._poll();
             } else {
-                that._fail();
+                that._error();
             }
         });
     };
 
     Poller.prototype.close = function() {
         if (this.readyState === CLOSING || this.readyState === CLOSED) return;
+        if (this.readyState === CONNECTING) {
+            this._currentConnection.abort();
+            return;
+        };
 
         this.readyState = CLOSING;
         var close = this._close.bind(this);

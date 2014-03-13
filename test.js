@@ -355,6 +355,32 @@ describe("poller", function() {
         });
     });
 
+    it('does not open connection if close is called before connection is opened', function() {
+        allRequests(function(requests) {
+            var poller = new Poller("/test");
+            poller.close();
+
+            poller.onopen = sinon.spy();
+
+            requests[0].respond(200, headers, uuid);
+
+            expect(poller.onopen.callCount).toBe(0);
+        });
+    });
+
+    it('triggers close event if close is called before connection is opened', function() {
+        allRequests(function(requests) {
+            var poller = new Poller("/test");
+
+            poller.onclose = sinon.spy();
+            poller.close();
+
+            requests[0].respond(200, headers, uuid);
+
+            expect(poller.onclose.callCount).toBe(1);
+        });
+    });
+
     it("throws exception when trying to send data when connection is not set up", function() {
         allRequests(function(requests) {
             var poller = new Poller("/test");
