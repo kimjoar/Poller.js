@@ -5,9 +5,7 @@
         define(['jquery'], factory);
     } else if (typeof exports !== 'undefined') {
         // Node.js or CommonJS
-        var $;
-        try { $ = require('jquery'); } catch(e) {}
-        factory($);
+        factory(require('jquery'));
     } else {
         // browser global
         root.Poller = factory(root.jQuery);
