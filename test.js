@@ -273,6 +273,21 @@ describe("poller", function() {
         });
     });
 
+    it("does nothing when calling close on a closed connection", function() {
+        allRequests(function(requests) {
+            var poller = new Poller("/test");
+            poller.onclose = sinon.spy();
+
+            requests[0].respond(200, headers, uuid);
+
+            poller.close();
+            poller.close();
+            poller.close();
+
+            expect(requests.length).toEqual(3);
+        });
+    });
+
     it("calls onclose when connection is closed", function() {
         allRequests(function(requests) {
             var poller = new Poller("/test");
