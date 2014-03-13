@@ -1,7 +1,7 @@
 Poller.js
 =========
 
-Simple long-polling utility that follows the HTML5 Websockets API
+Long-polling library that adheres to the [WebSocket API](http://www.w3.org/TR/websockets/)
 
 ```javascript
 var poller = new Poller("url");
