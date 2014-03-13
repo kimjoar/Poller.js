@@ -86,21 +86,19 @@
         if (this.readyState === CLOSING || this.readyState === CLOSED) return;
 
         this.readyState = CLOSING;
-
-        var that = this;
+        var close = this._close.bind(this);
 
         $.ajax({
             url: this.url + "/" + this.uuid,
             type: 'DELETE'
-        }).then(function() {
-            delete that.uuid;
-            that.readyState = CLOSED;
-            that.onclose();
-        }, function() {
-            delete that.uuid;
-            that.readyState = CLOSED;
-            that._fail();
-        });
+        }).then(close, close);
+    };
+
+    Poller.prototype._close = function() {
+        delete this.uuid;
+        this.readyState = CLOSED;
+        this.dispatchEvent({ type: 'close' });
+        this.onclose();
     };
 
     Poller.prototype.send = function(data) {

@@ -305,6 +305,40 @@ describe("poller", function() {
         });
     });
 
+    it("triggers close event when connection is closed", function() {
+        allRequests(function(requests) {
+            var poller = new Poller("/test");
+
+            var spy = sinon.spy();
+            poller.addEventListener('close', spy);
+
+            requests[0].respond(200, headers, uuid);
+
+            poller.close();
+
+            requests[2].respond(204, headers, "");
+
+            expect(spy.callCount).toBe(1);
+        });
+    });
+
+    it("triggers close event when connection does close cleanly", function() {
+        allRequests(function(requests) {
+            var poller = new Poller("/test");
+
+            var spy = sinon.spy();
+            poller.addEventListener('close', spy);
+
+            requests[0].respond(200, headers, uuid);
+
+            poller.close();
+
+            requests[2].respond(400);
+
+            expect(spy.callCount).toBe(1);
+        });
+    });
+
     it("sends data as plain text", function() {
         allRequests(function(requests) {
             var poller = new Poller("/test");
