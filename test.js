@@ -26,6 +26,21 @@ describe("poller", function() {
         expect(poller.onopen.callCount).toBe(1);
     });
 
+    it("calls open event if uuid is received in initial request", function() {
+        var poller;
+
+        var requests = allRequests(function() {
+            poller = new Poller("/test");
+        });
+
+        var spy = sinon.spy();
+        poller.addEventListener('open', spy);
+
+        requests[0].respond(200, headers, uuid);
+
+        expect(spy.callCount).toBe(1);
+    });
+
     it("does not call onopen if uuid is *not* received in initial request", function() {
         var poller;
 
@@ -54,6 +69,21 @@ describe("poller", function() {
         expect(poller.onerror.callCount).toBe(1);
     });
 
+    it("trigger error event if connection fails", function() {
+        var poller;
+
+        var requests = allRequests(function() {
+            poller = new Poller("/test");
+        });
+
+        var spy = sinon.spy();
+        poller.addEventListener('error', spy);
+
+        requests[0].respond(400, headers, "");
+
+        expect(spy.callCount).toBe(1);
+    });
+
     it("calls onclose if connection fails", function() {
         var poller;
 
@@ -66,6 +96,21 @@ describe("poller", function() {
         requests[0].respond(400, headers, "");
 
         expect(poller.onclose.callCount).toBe(1);
+    });
+
+    it("trigger close event if connection fails", function() {
+        var poller;
+
+        var requests = allRequests(function() {
+            poller = new Poller("/test");
+        });
+
+        var spy = sinon.spy();
+        poller.addEventListener('close', spy);
+
+        requests[0].respond(400, headers, "");
+
+        expect(spy.callCount).toBe(1);
     });
 
     it("calls onerror if uuid is *not* received in initial request", function() {
@@ -121,6 +166,21 @@ describe("poller", function() {
         });
     });
 
+    it("triggers message event with received data if poll succeeds", function() {
+        allRequests(function(requests) {
+            var poller = new Poller("/test");
+
+            var spy = sinon.spy();
+            poller.addEventListener('message', spy);
+
+            requests[0].respond(200, headers, uuid);
+            requests[1].respond(200, headers, "some data");
+
+            expect(spy.callCount).toBe(1);
+            expect(spy.firstCall.args[0].data).toEqual("some data");
+        });
+    });
+
     it("performs new poll request when poll request succeeds", function() {
         allRequests(function(requests) {
             var poller = new Poller("/test");
@@ -133,6 +193,25 @@ describe("poller", function() {
             requests[3].respond(200, headers, data);
 
             expect(poller.onmessage.callCount).toBe(3);
+        });
+    });
+
+    it("can remove message event listener", function() {
+        allRequests(function(requests) {
+            var poller = new Poller("/test");
+
+            var spy = sinon.spy();
+            poller.addEventListener('message', spy);
+
+            requests[0].respond(200, headers, uuid);
+            requests[1].respond(200, headers, data);
+            requests[2].respond(200, headers, data);
+
+            poller.removeEventListener('message', spy);
+
+            requests[3].respond(200, headers, data);
+
+            expect(spy.callCount).toBe(2);
         });
     });
 
