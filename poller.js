@@ -104,7 +104,9 @@
     };
 
     Poller.prototype.send = function(data) {
-        if (this.readyState !== OPEN) return;
+        if (this.readyState !== OPEN) {
+            throw new Error("Connection is not open");
+        }
 
         var that = this;
 

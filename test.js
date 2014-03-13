@@ -306,13 +306,13 @@ describe("poller", function() {
         });
     });
 
-    it("does not send data when connection is not set up", function() {
+    it("throws exception when trying to send data when connection is not set up", function() {
         allRequests(function(requests) {
             var poller = new Poller("/test");
 
-            poller.send("testing");
-
-            expect(requests.length).toBe(1);
+            expect(function() {
+                poller.send("testing");
+            }).toThrow(new Error("Connection is not open"));
         });
     });
 
