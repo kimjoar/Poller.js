@@ -1,11 +1,15 @@
+let Poller = require('./poller');
+let sinon = require('sinon');
+
+const headers = { "Content-Type": "text/plain" };
+const data = "some data";
+const uuid = "123-123";
+
 describe("poller", function() {
-    var headers = { "Content-Type": "text/plain" };
-    var data = "some data"
-    var uuid = "123-123";
 
     it("immediately performs ajax request to root resource when creating a new instance", function() {
-        var requests = allRequests(function() {
-            var poller = new Poller("/test");
+        let requests = allRequests(function() {
+            let poller = new Poller("/test");
         });
 
         expect(requests.length).toEqual(1);
@@ -13,9 +17,9 @@ describe("poller", function() {
     });
 
     it("calls onopen if uuid is received in initial request", function() {
-        var poller;
+        let poller;
 
-        var requests = allRequests(function() {
+        let requests = allRequests(function() {
             poller = new Poller("/test");
         });
 
@@ -27,13 +31,13 @@ describe("poller", function() {
     });
 
     it("calls open event if uuid is received in initial request", function() {
-        var poller;
+        let poller;
 
-        var requests = allRequests(function() {
+        let requests = allRequests(function() {
             poller = new Poller("/test");
         });
 
-        var spy = sinon.spy();
+        let spy = sinon.spy();
         poller.addEventListener('open', spy);
 
         requests[0].respond(200, headers, uuid);
@@ -42,9 +46,9 @@ describe("poller", function() {
     });
 
     it("does not call onopen if uuid is *not* received in initial request", function() {
-        var poller;
+        let poller;
 
-        var requests = allRequests(function() {
+        let requests = allRequests(function() {
             poller = new Poller("/test");
         });
 
@@ -56,9 +60,9 @@ describe("poller", function() {
     });
 
     it("calls onerror if connection fails", function() {
-        var poller;
+        let poller;
 
-        var requests = allRequests(function() {
+        let requests = allRequests(function() {
             poller = new Poller("/test");
         });
 
@@ -70,13 +74,13 @@ describe("poller", function() {
     });
 
     it("trigger error event if connection fails", function() {
-        var poller;
+        let poller;
 
-        var requests = allRequests(function() {
+        let requests = allRequests(function() {
             poller = new Poller("/test");
         });
 
-        var spy = sinon.spy();
+        let spy = sinon.spy();
         poller.addEventListener('error', spy);
 
         requests[0].respond(400, headers, "");
@@ -85,9 +89,9 @@ describe("poller", function() {
     });
 
     it("calls onclose if connection fails", function() {
-        var poller;
+        let poller;
 
-        var requests = allRequests(function() {
+        let requests = allRequests(function() {
             poller = new Poller("/test");
         });
 
@@ -99,13 +103,13 @@ describe("poller", function() {
     });
 
     it("trigger close event if connection fails", function() {
-        var poller;
+        let poller;
 
-        var requests = allRequests(function() {
+        let requests = allRequests(function() {
             poller = new Poller("/test");
         });
 
-        var spy = sinon.spy();
+        let spy = sinon.spy();
         poller.addEventListener('close', spy);
 
         requests[0].respond(400, headers, "");
@@ -114,9 +118,9 @@ describe("poller", function() {
     });
 
     it("calls onerror if uuid is *not* received in initial request", function() {
-        var poller;
+        let poller;
 
-        var requests = allRequests(function() {
+        let requests = allRequests(function() {
             poller = new Poller("/test");
         });
 
@@ -128,9 +132,9 @@ describe("poller", function() {
     });
 
     it("calls onclose if uuid is *not* received in initial request", function() {
-        var poller;
+        let poller;
 
-        var requests = allRequests(function() {
+        let requests = allRequests(function() {
             poller = new Poller("/test");
         });
 
@@ -143,7 +147,7 @@ describe("poller", function() {
 
     it("performs poll request containing uuid when connection succeeds", function() {
         allRequests(function(requests) {
-            var poller = new Poller("/test");
+            let poller = new Poller("/test");
 
             requests[0].respond(200, headers, uuid);
 
@@ -154,7 +158,7 @@ describe("poller", function() {
 
     it("calls onmessage with received data if poll succeeds", function() {
         allRequests(function(requests) {
-            var poller = new Poller("/test");
+            let poller = new Poller("/test");
 
             poller.onmessage = sinon.spy();
 
@@ -162,15 +166,15 @@ describe("poller", function() {
             requests[1].respond(200, headers, "some data");
 
             expect(poller.onmessage.callCount).toBe(1);
-            expect(poller.onmessage.firstCall.args[0]).toEqual({ data: "some data" });
+            expect(poller.onmessage.firstCall.args[0]).toEqual(jasmine.objectContaining({ data: "some data" }));
         });
     });
 
     it("triggers message event with received data if poll succeeds", function() {
         allRequests(function(requests) {
-            var poller = new Poller("/test");
+            let poller = new Poller("/test");
 
-            var spy = sinon.spy();
+            let spy = sinon.spy();
             poller.addEventListener('message', spy);
 
             requests[0].respond(200, headers, uuid);
@@ -183,7 +187,7 @@ describe("poller", function() {
 
     it("performs new poll request when poll request succeeds", function() {
         allRequests(function(requests) {
-            var poller = new Poller("/test");
+            let poller = new Poller("/test");
 
             poller.onmessage = sinon.spy();
 
@@ -198,9 +202,9 @@ describe("poller", function() {
 
     it("can remove message event listener", function() {
         allRequests(function(requests) {
-            var poller = new Poller("/test");
+            let poller = new Poller("/test");
 
-            var spy = sinon.spy();
+            let spy = sinon.spy();
             poller.addEventListener('message', spy);
 
             requests[0].respond(200, headers, uuid);
@@ -217,9 +221,9 @@ describe("poller", function() {
 
     it("performs new poll request when request times out", function() {
         allRequests(function(requests) {
-            var clock = sinon.useFakeTimers();
+            let clock = sinon.useFakeTimers();
 
-            var poller = new Poller("/test");
+            let poller = new Poller("/test");
 
             poller.onmessage = sinon.spy();
 
@@ -242,7 +246,7 @@ describe("poller", function() {
 
     it("does not perform new poll request when poll request fails", function() {
         allRequests(function(requests) {
-            var poller = new Poller("/test");
+            let poller = new Poller("/test");
 
             poller.onmessage = sinon.spy();
             poller.onerror = sinon.spy();
@@ -260,7 +264,7 @@ describe("poller", function() {
 
     it("performs DELETE when closing connection", function() {
         allRequests(function(requests) {
-            var poller = new Poller("/test");
+            let poller = new Poller("/test");
             poller.onclose = sinon.spy();
 
             requests[0].respond(200, headers, uuid);
@@ -275,7 +279,7 @@ describe("poller", function() {
 
     it("does nothing when calling close on a closed connection", function() {
         allRequests(function(requests) {
-            var poller = new Poller("/test");
+            let poller = new Poller("/test");
             poller.onclose = sinon.spy();
 
             requests[0].respond(200, headers, uuid);
@@ -290,7 +294,7 @@ describe("poller", function() {
 
     it("calls onclose when connection is closed", function() {
         allRequests(function(requests) {
-            var poller = new Poller("/test");
+            let poller = new Poller("/test");
             poller.onclose = sinon.spy();
 
             requests[0].respond(200, headers, uuid);
@@ -307,9 +311,9 @@ describe("poller", function() {
 
     it("triggers close event when connection is closed", function() {
         allRequests(function(requests) {
-            var poller = new Poller("/test");
+            let poller = new Poller("/test");
 
-            var spy = sinon.spy();
+            let spy = sinon.spy();
             poller.addEventListener('close', spy);
 
             requests[0].respond(200, headers, uuid);
@@ -324,9 +328,9 @@ describe("poller", function() {
 
     it("triggers close event when connection does close cleanly", function() {
         allRequests(function(requests) {
-            var poller = new Poller("/test");
+            let poller = new Poller("/test");
 
-            var spy = sinon.spy();
+            let spy = sinon.spy();
             poller.addEventListener('close', spy);
 
             requests[0].respond(200, headers, uuid);
@@ -341,7 +345,7 @@ describe("poller", function() {
 
     it("sends data as plain text", function() {
         allRequests(function(requests) {
-            var poller = new Poller("/test");
+            let poller = new Poller("/test");
             poller.onclose = sinon.spy();
 
             requests[0].respond(200, headers, uuid);
@@ -357,7 +361,7 @@ describe("poller", function() {
 
     it('does not open connection if close is called before connection is opened', function() {
         allRequests(function(requests) {
-            var poller = new Poller("/test");
+            let poller = new Poller("/test");
             poller.close();
 
             poller.onopen = sinon.spy();
@@ -370,7 +374,7 @@ describe("poller", function() {
 
     it('triggers close event if close is called before connection is opened', function() {
         allRequests(function(requests) {
-            var poller = new Poller("/test");
+            let poller = new Poller("/test");
 
             poller.onclose = sinon.spy();
             poller.close();
@@ -383,7 +387,7 @@ describe("poller", function() {
 
     it("throws exception when trying to send data when connection is not set up", function() {
         allRequests(function(requests) {
-            var poller = new Poller("/test");
+            let poller = new Poller("/test");
 
             expect(function() {
                 poller.send("testing");
@@ -393,8 +397,8 @@ describe("poller", function() {
 
 
     function allRequests(callback) {
-        var xhr = sinon.useFakeXMLHttpRequest();
-        var requests = [];
+        let xhr = sinon.useFakeXMLHttpRequest();
+        let requests = [];
 
         xhr.onCreate = function (xhr) {
             requests.push(xhr);

@@ -1,86 +1,85 @@
-(function (root, factory) {
+const EventTarget = require("event-target-shim");
+const $ = require("jquery");
+const assign = require("object-assign");
 
-    if (typeof define === 'function' && define.amd) {
-        // amd
-        define(['jquery'], factory);
-    } else if (typeof exports !== 'undefined') {
-        // Node.js or CommonJS
-        factory(require('jquery'));
-    } else {
-        // browser global
-        root.Poller = factory(root.jQuery);
-    }
+const CONNECTING = 0,
+      OPEN = 1,
+      CLOSING = 2,
+      CLOSED = 3;
 
-}(this, function ($) {
-    'use strict';
+const connect = (url) => {
+    return $.ajax({
+        url: url,
+        dataType: 'text'
+    });
+}
 
-    var CONNECTING = 0,
-        OPEN = 1,
-        CLOSING = 2,
-        CLOSED = 3;
+const createEvent = (name, data = {}) => {
+    let evt = document.createEvent("Event");
+    let bubbles = false;
+    let cancelable = false;
+    evt.initEvent(name, bubbles, cancelable);
+    assign(evt, data);
+    return evt;
+}
 
-    var Poller = function(url) {
+class Poller extends EventTarget("open", "error", "message", "close") {
+
+    constructor(url) {
+        super();
+
         this.url = url;
         this.readyState = CONNECTING;
 
         var connected = this._connected.bind(this);
         var fail = this._error.bind(this);
 
-        this._currentConnection = this._connect();
+        this._currentConnection = connect(this.url);
         this._currentConnection.then(connected, fail);
-    };
+    }
 
-    Poller.prototype._connect = function() {
-        return $.ajax({
-            url: this.url,
-            dataType: 'text'
-        });
-    };
-
-    Poller.prototype._connected = function(data) {
+    _connected(data) {
         if (typeof data === 'string' && data.trim() !== "") {
             this.uuid = data;
             this.readyState = OPEN;
-            this.dispatchEvent({ type: 'open' });
-            this.onopen();
+            this.dispatchEvent(createEvent("open"));
             this._poll();
         } else {
             this._error();
         }
-    };
+    }
 
-    Poller.prototype._error = function() {
-        this.dispatchEvent({ type: 'error' });
-        this.onerror();
+    _error() {
+        this.dispatchEvent(createEvent("error"));
         this._close();
-    };
+    }
 
-    Poller.prototype._poll = function() {
+    _poll() {
         if (this.readyState !== OPEN) return;
-
-        var that = this;
 
         $.ajax({
             url: this.url + "/" + this.uuid,
             dataType: 'text',
             timeout: 30000,
             cache: false
-        }).then(function(data) {
-            if (data) {
-                that.dispatchEvent({ type: 'message', data: data });
-                that.onmessage({ data: data });
+        }).then(
+            (data) => {
+                if (data) {
+                    this.dispatchEvent(createEvent("message", { data: data }));
+                }
+                this._poll();
+            },
+            (jqXHR, textStatus) => {
+                if (textStatus === 'timeout') {
+                    this._poll();
+                } else {
+                    this._error();
+                }
             }
-            that._poll();
-        }, function(jqXHR, textStatus) {
-            if (textStatus === 'timeout') {
-                that._poll();
-            } else {
-                that._error();
-            }
-        });
-    };
+        );
+    }
 
-    Poller.prototype.close = function() {
+    close() {
         if (this.readyState === CLOSING || this.readyState === CLOSED) return;
         if (this.readyState === CONNECTING) {
             this._currentConnection.abort();
@@ -94,146 +93,29 @@
             url: this.url + "/" + this.uuid,
             type: 'DELETE'
         }).then(close, close);
-    };
+    }
 
-    Poller.prototype._close = function() {
+    _close() {
         delete this.uuid;
         this.readyState = CLOSED;
-        this.dispatchEvent({ type: 'close' });
-        this.onclose();
-    };
+        this.dispatchEvent(createEvent("close"));
+    }
 
-    Poller.prototype.send = function(data) {
+    send(data) {
         if (this.readyState !== OPEN) {
             throw new Error("Connection is not open");
         }
-
-        var that = this;
 
         $.ajax({
             url: this.url + "/" + this.uuid,
             type: 'POST',
             data: data,
             contentType: 'text/plain'
-        }).then(function() {
-            // a-ok
-        }, function() {
-            // failed
-            that.onerror();
+        }).fail(() => {
+            this.dispatchEvent(createEvent("error"));
         });
-    };
+    }
+}
 
-    // defaults
-    Poller.prototype.onopen = function() {};
-    Poller.prototype.onerror = function() {};
-    Poller.prototype.onmessage = function() {};
-    Poller.prototype.onclose = function() {};
+module.exports = Poller;
 
-    /*! (C) WebReflection - Mit Style License */
-    /* https://github.com/WebReflection/event-target */
-    var EventTarget = (function () {
-      var
-        PREFIX = "@@",
-        EventTarget = {},
-        descriptor = {
-          // in ES5 does not bother with enumeration
-          configurable: true,
-          value: null
-        },
-        defineProperty = Object.defineProperty ||
-        function defineProperty(obj, prop, desc) {
-          // in ES3 obj.hasOwnProperty() in for/in loops
-          // is still mandatory since there's no way
-          // to simulate non enumerable properties
-          obj[prop] = desc.value;
-        },
-        indexOf = [].indexOf || function indexOf(value) {
-          var i = this.length;
-          while (i-- && this[i] !== value) {}
-          return i;
-        },
-        has = EventTarget.hasOwnProperty;
-
-      function configure(obj, prop, value) {
-        descriptor.value = value;
-        defineProperty(obj, prop, descriptor);
-        descriptor.value = null;
-      }
-
-      function on(self, type, listener) {
-        var array;
-        if (has.call(self, type)) {
-          array = self[type];
-        } else {
-          configure(self, type, array = []);
-        }
-        if (indexOf.call(array, listener) < 0) {
-          array.push(listener);
-        }
-      }
-
-      function dispatch(self, type, evt) {
-        var array, current, i;
-        if (has.call(self, type)) {
-          evt.target = self;
-          array = self[type].slice(0);
-          for (i = 0; i < array.length; i++) {
-            current = array[i];
-            if (typeof current === "function") {
-              current.call(self, evt);
-            } else if (typeof current.handleEvent === "function") {
-              current.handleEvent(evt);
-            }
-          }
-        }
-      }
-
-      function off(self, type, listener) {
-        var array, i;
-        if (has.call(self, type)) {
-          array = self[type];
-          i = indexOf.call(array, listener);
-          if (-1 < i) {
-            array.splice(i, 1);
-            if (!array.length) {
-              delete self[type];
-            }
-          }
-        }
-      }
-
-      configure(
-        EventTarget,
-        "addEventListener",
-        function addEventListener(type, listener) {
-          on(this, PREFIX + type, listener);
-        }
-      );
-
-      configure(
-        EventTarget,
-        "dispatchEvent",
-        function dispatchEvent(evt) {
-          dispatch(this, PREFIX + evt.type, evt);
-        }
-      );
-
-      configure(
-        EventTarget,
-        "removeEventListener",
-        function removeEventListener(type, listener) {
-          off(this, PREFIX + type, listener);
-        }
-      );
-
-      return EventTarget;
-
-    }())
-
-    Poller.prototype.addEventListener = EventTarget.addEventListener;
-    Poller.prototype.removeEventListener = EventTarget.removeEventListener;
-    Poller.prototype.dispatchEvent = EventTarget.dispatchEvent;
-
-    return Poller;
-
-}));

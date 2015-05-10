@@ -9,17 +9,22 @@ module.exports = function(config) {
 
 
     // frameworks to use
-    frameworks: ['jasmine'],
+    frameworks: ['browserify', 'jasmine'],
 
 
     // list of files / patterns to load in the browser
     files: [
-      'bower_components/sinonjs/sinon.js',
-      'bower_components/jquery/jquery.js',
-      'poller.js',
       'test.js'
     ],
 
+    preprocessors: {
+      'test.js': ['browserify']
+    },
+
+    browserify: {
+      debug: true,
+      transform: ['babelify']
+    },
 
     // list of files to exclude
     exclude: [

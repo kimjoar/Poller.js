@@ -1,0 +1,27 @@
+{
+  "name": "Poller.js",
+  "version": "1.0.0",
+  "description": "Simple long-polling utility which follows the HTML5 Websockets API",
+  "main": "poller.js",
+  "scripts": {
+    "build": "browserify poller.js --transform babelify --standalone Poller --outfile dist/poller.js",
+    "test": "karma start karma.conf.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kjbekkelund/Poller.js.git"
+  },
+  "author": "Kim Joar Bekkelund <kjbekkelund@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/kjbekkelund/Poller.js/issues"
+  },
+  "homepage": "https://github.com/kjbekkelund/Poller.js",
+  "devDependencies": {
+    "babelify": "^6.0.2",
+    "jquery": "2.0.3",
+    "karma-browserify": "^4.1.2",
+    "object-assign": "^2.0.0",
+    "sinon": "^1.14.1"
+  }
+}
