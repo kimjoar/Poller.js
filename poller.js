@@ -19,9 +19,10 @@
         CLOSING = 2,
         CLOSED = 3;
 
-    var Poller = function(url) {
+    var Poller = function(url, customHeaders) {
         this.url = url;
         this.readyState = CONNECTING;
+        this.customHeaders = (customHeaders !== undefined) ? customHeaders : {};
 
         var connected = this._connected.bind(this);
         var fail = this._error.bind(this);
@@ -33,7 +34,8 @@
     Poller.prototype._connect = function() {
         return $.ajax({
             url: this.url,
-            dataType: 'text'
+            dataType: 'text',
+            headers: this.customHeaders
         });
     };
 
@@ -64,7 +66,8 @@
             url: this.url + "/" + this.uuid,
             dataType: 'text',
             timeout: 30000,
-            cache: false
+            cache: false,
+            headers: this.customHeaders
         }).then(function(data) {
             if (data) {
                 that.dispatchEvent({ type: 'message', data: data });
@@ -92,7 +95,8 @@
 
         $.ajax({
             url: this.url + "/" + this.uuid,
-            type: 'DELETE'
+            type: 'DELETE',
+            headers: this.customHeaders
         }).then(close, close);
     };
 
@@ -114,7 +118,8 @@
             url: this.url + "/" + this.uuid,
             type: 'POST',
             data: data,
-            contentType: 'text/plain'
+            contentType: 'text/plain',
+            headers: this.customHeaders
         }).then(function() {
             // a-ok
         }, function() {
